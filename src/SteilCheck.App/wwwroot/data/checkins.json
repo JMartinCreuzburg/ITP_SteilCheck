@@ -1,0 +1,5 @@
+[
+ {"datum":"2026-07-10","einlass":"18:30","name":"Max Muster","telefon":"0171 39200001","alter":30,"personen":2},
+ {"datum":"2026-07-10","einlass":"19:00","name":"Erika Muster","telefon":"0171 39200002","alter":28,"personen":1},
+ {"datum":"2026-07-10","einlass":"20:15","name":"Test Gast","telefon":"0171 39200003","alter":17,"personen":3}
+]
