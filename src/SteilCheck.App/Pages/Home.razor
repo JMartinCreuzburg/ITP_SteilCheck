@@ -1,7 +1,219 @@
-﻿@page "/"
+@page "/"
+@page "/index.html"
+@using SteilCheck.Logik
+@using SteilCheck.App.Services
+@inject HttpClient Http
+@inject Statistik Statistik
 
-<PageTitle>Home</PageTitle>
+<PageTitle>SteilCheck</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="kopf">
+    <span class="titel">SteilCheck v1.0</span>
+    <span class="ampel @(new Auslastung().Ampel(Statistik.BelegtJetzt))">Belegung: @Statistik.BelegtJetzt</span>
+    <span class="schritt">Schritt @maske / 4</span>
+</div>
 
-Welcome to your new app.
+<div class="inhalt">
+    @if (fehler != "")
+    {
+        <div class="fehler">@fehler</div>
+    }
+
+    @if (maske == 1)
+    {
+        <fieldset>
+            <legend>Erfassung Stammdaten</legend>
+            <table class="form">
+                <tr>
+                    <td>Einlasszeit (HH:MM)</td>
+                    <td><input @bind="einlassText" @bind:after="Statistik.Neuberechnen" /></td>
+                </tr>
+                <tr>
+                    <td>Anzahl Personen</td>
+                    <td><input type="number" @bind="anzahl" @bind:after="Statistik.Neuberechnen" /></td>
+                </tr>
+                <tr>
+                    <td>Wie haben Sie von uns erfahren?*</td>
+                    <td>
+                        <select @bind="wieErfahren">
+                            <option value="">-- bitte wählen --</option>
+                            <option>Internet</option>
+                            <option>Freunde</option>
+                            <option>Flyer</option>
+                            <option>Social Media</option>
+                            <option>Sonstiges</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+    }
+    else if (maske == 2)
+    {
+        @foreach (var p in personen)
+        {
+            <fieldset>
+                <legend>Person @(personen.IndexOf(p) + 1)</legend>
+                <table class="form">
+                    <tr><td>Name*</td><td><input @bind="p.Name" @bind:after="Statistik.Neuberechnen" /></td></tr>
+                    <tr><td>Alter*</td><td><input @bind="p.AlterText" @bind:after="Statistik.Neuberechnen" /></td></tr>
+                    <tr><td>Telefon</td><td><input @bind="p.Telefon" @bind:after="Statistik.Neuberechnen" /></td></tr>
+                    <tr><td>Erm.</td><td><input type="checkbox" @bind="p.Ausweis" /></td></tr>
+                    <tr><td>LS</td><td><input type="checkbox" @bind="p.Schuhe" /></td></tr>
+                </table>
+            </fieldset>
+        }
+    }
+    else if (maske == 3)
+    {
+        <fieldset>
+            <legend>Kontrolle</legend>
+            <table class="liste">
+                <tr><th>Name</th><th>Alter</th><th>Telefon</th><th>Erm.</th><th>LS</th></tr>
+                @foreach (var g in checkIn.Gaeste)
+                {
+                    <tr><td>@g.Name</td><td>@g.Alter</td><td>@g.Telefon</td><td>@(g.Ausweis ? "J" : "N")</td><td>@(g.Schuhe ? "J" : "N")</td></tr>
+                }
+            </table>
+            <p>Einlass: @checkIn.Einlass.ToString("HH:mm") · Quelle: @checkIn.WieErfahren</p>
+        </fieldset>
+    }
+    else if (maske == 4)
+    {
+        <fieldset>
+            <legend>Abschluss</legend>
+            <div class="summe">Zu zahlen: @kassenbetrag.ToString("0.00") EUR</div>
+            <button class="bon-knopf" @onclick="BonAnzeigen">&#129534;</button>
+            @if (bonText != "")
+            {
+                <pre class="bon">@bonText</pre>
+            }
+        </fieldset>
+    }
+</div>
+
+<button class="abbrechen" @onclick="Abbrechen">&#10006;</button>
+<button class="weiter" @onclick="Weiter">&#10140;</button>
+
+@code {
+    int maske = 1;
+    string fehler = "";
+
+    string einlassText = DateTime.Now.ToString("HH:mm");
+    int anzahl = 1;
+    string wieErfahren = "";
+
+    List<PersonFormular> personen = new List<PersonFormular>();
+    CheckIn checkIn = new CheckIn();
+    decimal kassenbetrag;
+    string bonText = "";
+
+    class PersonFormular
+    {
+        public string Name { get; set; } = "";
+        public string AlterText { get; set; } = "";
+        public string Telefon { get; set; } = "";
+        public bool Ausweis { get; set; }
+        public bool Schuhe { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Statistik.Eintraege = await Http.GetFromJsonAsync<List<CheckInEintrag>>("data/checkins.json") ?? new List<CheckInEintrag>();
+        Statistik.Neuberechnen();
+    }
+
+    void Weiter()
+    {
+        fehler = "";
+        if (maske == 1)
+        {
+            if (!TimeOnly.TryParseExact(einlassText, "HH:mm", out var einlass) || wieErfahren == "")
+            {
+                fehler = "Fehler 0x3F";
+                Zuruecksetzen();
+                return;
+            }
+            checkIn = new CheckIn { Einlass = einlass, WieErfahren = wieErfahren };
+            personen = new List<PersonFormular>();
+            for (int i = 0; i < anzahl; i++)
+                personen.Add(new PersonFormular());
+            maske = 2;
+        }
+        else if (maske == 2)
+        {
+            foreach (var p in personen)
+            {
+                if (p.Name == "")
+                {
+                    fehler = "Fehler 0x3F";
+                    personen = personen.Select(_ => new PersonFormular()).ToList();
+                    return;
+                }
+            }
+            checkIn.Gaeste.Clear();
+            foreach (var p in personen)
+            {
+                checkIn.Gaeste.Add(new Gast
+                {
+                    Name = p.Name,
+                    Alter = int.Parse(p.AlterText),
+                    Telefon = p.Telefon,
+                    Ausweis = p.Ausweis,
+                    Schuhe = p.Schuhe
+                });
+            }
+            maske = 3;
+        }
+        else if (maske == 3)
+        {
+            if (!new CheckInPruefer().IstGueltig(checkIn))
+            {
+                fehler = "Fehler 0x3F";
+                return;
+            }
+            kassenbetrag = new PreisRechner().Gesamtpreis(checkIn);
+            maske = 4;
+        }
+        else
+        {
+            foreach (var g in checkIn.Gaeste)
+            {
+                Statistik.Eintraege.Add(new CheckInEintrag
+                {
+                    Datum = Statistik.Eintraege.Max(e => e.Datum),
+                    Einlass = checkIn.Einlass.ToString("HH:mm"),
+                    Name = g.Name,
+                    Telefon = g.Telefon,
+                    Alter = g.Alter,
+                    Personen = 1
+                });
+            }
+            Zuruecksetzen();
+        }
+        Statistik.Neuberechnen();
+    }
+
+    void BonAnzeigen()
+    {
+        var ersteller = new BonErsteller();
+        bonText = ersteller.AlsText(ersteller.Erstelle(checkIn));
+    }
+
+    void Abbrechen()
+    {
+        fehler = "";
+        Zuruecksetzen();
+    }
+
+    void Zuruecksetzen()
+    {
+        maske = 1;
+        einlassText = DateTime.Now.ToString("HH:mm");
+        anzahl = 1;
+        wieErfahren = "";
+        personen = new List<PersonFormular>();
+        checkIn = new CheckIn();
+        bonText = "";
+    }
+}
