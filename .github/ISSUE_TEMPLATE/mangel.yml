@@ -1,0 +1,72 @@
+name: Mangel melden
+description: Abweichung von SteilCheck gegenüber dem Lastenheft oder gegenüber dem, was man selbstverständlich erwarten darf
+title: "[Mangel] "
+labels: ["mangel"]
+body:
+  - type: input
+    id: testfall
+    attributes:
+      label: Testfall-ID
+      description: Aus eurer Testfall-Datei (z. B. B-03) oder aus dem Prüfauftrag (z. B. P3-B). Im Testbudget leer lassen.
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte und Eingaben
+      description: So genau, dass jemand anderes den Mangel nachstellen kann.
+      placeholder: "1. Einlass 20:05, 5 Personen …"
+    validations:
+      required: true
+  - type: input
+    id: erwartet
+    attributes:
+      label: Erwartetes Ergebnis
+      description: Laut Lastenheft oder Auskunft von Jonas (steht im Auftrag, z. B. „laut A1“), nicht laut SteilCheck
+    validations:
+      required: true
+  - type: input
+    id: tatsaechlich
+    attributes:
+      label: Tatsächliches Ergebnis
+    validations:
+      required: true
+  - type: dropdown
+    id: lastenheft
+    attributes:
+      label: Lastenheft-Bezug
+      options:
+        - F1 Tarife nach Alter
+        - F2 Kleinkinder mit Begleitung
+        - F3 Ermäßigung
+        - F4 Abendtarif
+        - F5 Leihschuhe
+        - F6 Gruppenrabatt
+        - F7 Personen, Alter, Einlasszeit
+        - F8 Bon
+        - F9 Auslastungsanzeige
+        - F10 Rundung
+        - N1 Bedienung am Tablet
+        - N2 Datenschutz
+        - N3 Browser
+        - nicht im Lastenheft (vorausgesetzt)
+    validations:
+      required: true
+  - type: dropdown
+    id: iso
+    attributes:
+      label: ISO-25010-Merkmal
+      options:
+        - Funktionale Eignung
+        - Leistungseffizienz
+        - Kompatibilität
+        - Benutzbarkeit
+        - Zuverlässigkeit
+        - Sicherheit
+        - Wartbarkeit
+        - Portabilität
+    validations:
+      required: true
+  - type: input
+    id: geraet
+    attributes:
+      label: Gerät und Browser
+      placeholder: z. B. Smartphone, Chrome

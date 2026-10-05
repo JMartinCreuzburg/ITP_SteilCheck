@@ -1,0 +1,33 @@
+name: Testbudget
+description: Block 1, Phase 5 – eure 8 Alterswerte für Anforderung F1, je Wert ein Satz, warum
+title: "[Testbudget] "
+labels: ["testbudget"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        AppWerk hat F1 (Tarife nach Alter) mit **10, 16, 30 und 70** getestet. Alle grün. Ihr habt ein Budget von
+        **8 Alterswerten**. Findet ihr, was AppWerk übersehen hat?
+
+        Welchen Preis SteilCheck je Alter berechnen muss, steht in F1 im Lastenheft (`abnahme/Lastenheft.md`). Was
+        sonst noch zum Alter gilt, steht ebenfalls dort.
+  - type: textarea
+    id: werte
+    attributes:
+      label: Unsere 8 Werte
+      description: |
+        Je Zeile ein Wert und ein Satz, warum ihr ihn wählt. „Wer?“ = Kürzel der Person, die ihn testet (jede Person 2 Werte).
+        Abweichungen meldet ihr sofort mit „Mangel melden“ und tragt dann hier die Issue-Nummer unter „Fund“ ein.
+      value: |
+        | # | Alter | Warum dieser Wert? | Wer? | Fund |
+        |---|---|---|---|---|
+        | 1 |  |  |  |  |
+        | 2 |  |  |  |  |
+        | 3 |  |  |  |  |
+        | 4 |  |  |  |  |
+        | 5 |  |  |  |  |
+        | 6 |  |  |  |  |
+        | 7 |  |  |  |  |
+        | 8 |  |  |  |  |
+    validations:
+      required: true

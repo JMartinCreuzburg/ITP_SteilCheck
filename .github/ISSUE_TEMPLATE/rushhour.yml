@@ -1,0 +1,24 @@
+name: Ergebnis Rush-Hour
+description: Block 1, Phase 2 – wird vom Rush-Hour-Werkzeug ausgefüllt („Als Issue speichern“)
+title: "Rush-Hour: unser Ergebnis"
+labels: ["rushhour"]
+body:
+  - type: textarea
+    id: messwerte
+    attributes:
+      label: Messwerte
+      description: Gäste in 4 Minuten und falsche Preise je Runde
+    validations:
+      required: true
+  - type: textarea
+    id: prinzipien
+    attributes:
+      label: Verletzte Prinzipien
+      description: Drei Prinzipien der Usability-Karte, je mit Beleg aus der Rush-Hour
+    validations:
+      required: true
+  - type: textarea
+    id: zitate
+    attributes:
+      label: Zitate
+      description: sortiert nach Usability („Hab’s geschafft“) und UX („Ich trau dem Preis nicht“)

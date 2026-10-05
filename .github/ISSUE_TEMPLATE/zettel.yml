@@ -1,0 +1,32 @@
+name: Zettel
+description: Ein Problem, das euch beim freien Ausprobieren auffällt. Ein Problem = ein Zettel.
+title: "[Zettel] "
+labels: ["zettel"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Jede Art von Problem zählt: falsch, langsam, unverständlich, unbequem, unsicher. Schreibt den Titel als
+        kurzen Satz, er steht später auf der Karte im Board. Euer Name kommt automatisch dazu.
+  - type: textarea
+    id: was
+    attributes:
+      label: Was ist passiert?
+      placeholder: z. B. Nach jeder Eingabe hängt die App ein paar Sekunden.
+    validations:
+      required: true
+  - type: input
+    id: wo
+    attributes:
+      label: Wo?
+      description: Maske, Feld oder Knopf
+  - type: textarea
+    id: nachstellen
+    attributes:
+      label: Wie stellt man es nach?
+      placeholder: "1. … 2. …"
+  - type: input
+    id: geraet
+    attributes:
+      label: Gerät und Browser
+      placeholder: z. B. Smartphone, Chrome

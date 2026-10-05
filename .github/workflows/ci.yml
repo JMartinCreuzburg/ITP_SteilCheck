@@ -1,0 +1,52 @@
+name: Tests
+
+# Führt AppWerks Tests und unsere Abnahmetests aus. Für alle, die in github.dev arbeiten,
+# ist das die einzige Stelle, an der die Tests laufen.
+on:
+  push:
+    branches-ignore: ['appwerk/**']
+    paths-ignore: ['**.md']
+  pull_request:
+  workflow_dispatch:
+
+# Neuere Läufe auf demselben Branch brechen ältere ab. Der neueste Lauf prüft alles.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: AppWerk-Tests und Abnahmetests
+    # Pull Requests nur für Lieferungen von AppWerk; eigene Branches laufen schon beim Push
+    if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'appwerk/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ hashFiles('**/*.csproj') }}
+      - name: Bauen
+        run: dotnet build SteilCheck.sln
+      - name: AppWerk-Tests
+        id: appwerk
+        continue-on-error: true
+        run: dotnet test tests/SteilCheck.Tests --no-build --logger "console;verbosity=normal" --logger "trx;LogFileName=appwerk.trx" --results-directory testergebnisse
+      - name: Abnahmetests
+        id: abnahme
+        continue-on-error: true
+        run: dotnet test abnahme/SteilCheck.Abnahmetests --no-build --logger "trx;LogFileName=abnahme.trx" --results-directory testergebnisse
+      - name: Zusammenfassung
+        if: always()
+        run: |
+          python3 .github/scripts/trx_zusammenfassung.py "AppWerk-Tests" testergebnisse/appwerk.trx >> "$GITHUB_STEP_SUMMARY"
+          python3 .github/scripts/trx_zusammenfassung.py "Abnahmetests" testergebnisse/abnahme.trx >> "$GITHUB_STEP_SUMMARY"
+      - name: Ergebnis
+        if: steps.appwerk.outcome == 'failure' || steps.abnahme.outcome == 'failure'
+        run: |
+          echo "AppWerk-Tests: ${{ steps.appwerk.outcome }} · Abnahmetests: ${{ steps.abnahme.outcome }}"
+          exit 1
